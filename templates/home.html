@@ -2,12 +2,16 @@
 <head>
 </head>
 <body>
-<!-- <form action="/post" method="POST">
-	<h1>Welcome {{email}}</h1>
-	<input type="text" name = "blog" placeholder="post" required/> </br>
+<h1>Welcome {{email}}</h1>
+{% if isGuest=="no" %}
+<form action="/post" method="POST">
+	<input type="text" name = "title" placeholder="Post Title" required/> </br>
+	<input type="text" name = "filepath" placeholder="File Path/URL" required/> </br>
+	<input type="radio" name="is_pub" id="option1" value="1"> Public </input>
+	<input type="radio" name="is_pub" id="option2" value="0"> Private </input>
 	<input type="submit" value = Post />
-</form> -->
-
+</form>
+{% endif %}
 <style type="text/css">
 	table, th, td{
 		border: 1px solid black;
@@ -15,13 +19,14 @@
 </style>
 
 Here are public posts:
-
+{% if isGuest=="no" %}
 <table>
 	<th>ID</th>
 	<th>Time</th>
-	<th>E-mail</th>
+	<th>Poster Email</th>
 	<th>File Path</th>
 	<th>Item</th>
+	<th>Operations</th>
 
 {% for line in posts %}
 	<tr>
@@ -30,10 +35,47 @@ Here are public posts:
 		<td>{{line.email_post}}</td>
 		<td>{{line.file_path}}</td>
 		<td>{{line.item_name}}</td>
+		<td>
+			<form action="/viewContent" method="POST">
+				<input type="hidden" name="id" value="{{line.item_id}}"/>
+				<input type="submit" value = "View Content"/>
+			</form> 
+			<br/>
+			<form action="/rate_comment" method="POST">
+				<input type="hidden" name="id" value="{{line.item_id}}"/>
+				<input type="submit" value = "Rate/Comment"/>
+			</form> 
+		</td>
 	</tr>
 {% endfor %}
 </table>
+{% endif %}
 
+{% if isGuest=="yes" %}
+<table>
+	<th>ID</th>
+	<th>Time</th>
+	<th>Poster Email</th>
+	<th>File Path</th>
+	<th>Item</th>
+	<th>Operations</th>
+{% for line in posts %}
+	<tr>
+		<td>{{line.item_id}}</td>
+		<td>{{line.post_time}}</td>
+		<td>{{line.email_post}}</td>
+		<td>{{line.file_path}}</td>
+		<td>{{line.item_name}}</td>
+		<td>
+			<form action="/viewContent" method="POST">
+				<input type="hidden" name="id" value="{{line.item_id}}"/>
+				<input type="submit" value = "View Content"/>
+			</form> 
+		</td>
+	</tr>
+{% endfor %}
+</table>
+{% endif %}
 <!-- <a href="/select_blogger">Select a blogger</a> -->
 <br>
 <a href="/logout">Logout</a>

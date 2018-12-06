@@ -1,0 +1,65 @@
+<html>
+<head>
+</head>
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+<h2>Item Information</h2>
+<table>
+	<th>ID</th>
+	<th>Time</th>
+	<th>Poster Email</th>
+	<th>File Path</th>
+	<th>Item</th>
+	<tr>
+		<td>{{content.item_id}}</td>
+		<td>{{content.post_time}}</td>
+		<td>{{content.email_post}}</td>
+		<td>{{content.file_path}}</td>
+		<td>{{content.item_name}}</td>
+	</tr>
+</table>
+
+<h2>People Tagged in this Content Item</h2>
+<table>
+    <th>Tagged Person</th>
+    {% for tagged in tag %}
+        <tr>
+            <td>{{tagged.email}}</td>
+            <td>{{tagged.fname}}</td>
+            <td>{{tagged.lname}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+<h2>Ratings for this Content Item</h2>
+<table>
+        <th>Email of Rater</th>
+        <th>Rating</th>
+        <th>Time of rating</th>
+        {% for rate in rating %}
+            <tr>
+                <td>{{rate.email}}</td>
+                <td>{{rate.emoji}}</td>
+                <td>{{rate.rate_time}}</td>
+            </tr>
+        {% endfor %}
+</table>
+
+<h2>Comments for this Content Item</h2>
+<table>
+        <th>Email of Commenter</th>
+        <th>Comment Time</th>
+        <th>Comment</th>
+        {% for comment in comments %}
+            <tr>
+                <td>{{comment.email}}</td>
+                <td>{{comment.comment_time}}</td>
+                <td>{{comment.comment}}</td>
+            </tr>
+        {% endfor %}
+</table>
