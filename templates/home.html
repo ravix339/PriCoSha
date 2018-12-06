@@ -2,24 +2,23 @@
 <head>
 </head>
 <body>
+
 <h1>Welcome {{email}}</h1>
-{% if isGuest=="no" %}
-<form action="/post" method="POST">
-	<input type="text" name = "title" placeholder="Post Title" required/> </br>
-	<input type="text" name = "filepath" placeholder="File Path/URL" required/> </br>
-	<input type="radio" name="is_pub" id="option1" value="1"> Public </input>
-	<input type="radio" name="is_pub" id="option2" value="0"> Private </input>
-	<input type="submit" value = Post />
-</form>
-{% endif %}
 <style type="text/css">
 	table, th, td{
 		border: 1px solid black;
 	}
 </style>
-
-Here are public posts:
 {% if isGuest=="no" %}
+<form action="/post" method="POST">
+	<input type="text" name = "title" placeholder="Post Title" required/> </br>
+	<input type="text" name = "filepath" placeholder="File Path/URL" required/> </br>
+	<input type="radio" name="is_pub" id="option1" value="1"> Public </input>
+	<input type="radio" name="is_pub" id="option2" value="0" checked> Private </input>
+	<input type="submit" value = Post />
+</form>
+<br>
+<h2>Post Feed</h2>
 <table>
 	<th>ID</th>
 	<th>Time</th>
@@ -52,6 +51,8 @@ Here are public posts:
 {% endif %}
 
 {% if isGuest=="yes" %}
+<br>
+<h2>Post Feed</h2>
 <table>
 	<th>ID</th>
 	<th>Time</th>

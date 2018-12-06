@@ -47,8 +47,8 @@ def home():
     else:
         isGuest='no'
     cursor = conn.cursor()
-    query = 'SELECT post_time, item_id, email_post, file_path, item_name FROM ContentItem WHERE is_pub = %s or is_pub is NULL AND post_time >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY post_time DESC'
-    cursor.execute(query, ('0'))
+    query = 'SELECT post_time, item_id, email_post, file_path, item_name FROM ContentItem as S WHERE ((is_pub = 0 AND %s IN ( SELECT DISTINCT email FROM belong WHERE belong.fg_name IN ( SELECT fg_name FROM belong WHERE belong.email=s.email_post))) OR is_pub=1) AND post_time >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY post_time DESC'
+    cursor.execute(query, (email))
     data = cursor.fetchall()
     cursor.close()
     return render_template('home.html', email=email, posts=data, isGuest=isGuest)
@@ -128,11 +128,8 @@ def post():
     item_name = request.form['title']
     filepath = request.form['filepath']
     is_pub = request.form['is_pub']
-    if is_pub == '0':
-        query = 'INSERT INTO contentitem (email_post, post_time, file_path, item_name, is_pub) VALUES(%s, CURRENT_TIMESTAMP, %s, %s, NULL)'
-    else:
-        query = 'INSERT INTO contentitem (email_post, post_time, file_path, item_name, is_pub) VALUES(%s, CURRENT_TIMESTAMP, %s, %s, 0)'
-    cursor.execute(query, (email, filepath, item_name))
+    query = 'INSERT INTO contentitem (email_post, post_time, file_path, item_name, is_pub) VALUES(%s, CURRENT_TIMESTAMP, %s, %s, %s)'
+    cursor.execute(query, (email, filepath, item_name, is_pub))
     conn.commit()
     cursor.close()
     return redirect(url_for('home'))
@@ -154,7 +151,7 @@ def viewContent():
     cursor.execute(query, (item_id))
     rating_info = cursor.fetchall()
 
-    query = 'SELECT email, comment_time, comment FROM comment WHERE item_id=%s'
+    query = 'SELECT email, commenttime, comment FROM comment WHERE item_id=%s'
     cursor.execute(query, (item_id))
     comment_info = cursor.fetchall()
 
@@ -190,8 +187,9 @@ def rate_comment():
         if rate == '' and comment=='':
             return render_template('rate_comment.html', error='Please rate or comment')
         else:
-            return redirect(url_for('/home'))
-    except:
+            return redirect(url_for('home'))
+    except Exception as e:
+        app.log_exception(e)
         return render_template('rate_comment.html', item_id=item_id)
 
 # @app.route('/select_blogger')
