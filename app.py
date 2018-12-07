@@ -8,9 +8,9 @@ app = Flask(__name__)
 
 #Configure MySQL
 conn = pymysql.connect(host='localhost',
-                       port = 3306,
+                       port = 8889,
                        user='root',
-                       password='',
+                       password='root',
                        db='PriCoSha',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -50,6 +50,7 @@ def home():
     query = 'SELECT post_time, item_id, email_post, file_path, item_name FROM ContentItem as S WHERE ((is_pub = 0 AND %s IN ( SELECT DISTINCT email FROM belong WHERE belong.fg_name IN ( SELECT fg_name FROM belong WHERE belong.email=s.email_post))) OR is_pub=1) AND post_time >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY post_time DESC'
     cursor.execute(query, (email))
     data = cursor.fetchall()
+    print(data)
     cursor.close()
     return render_template('home.html', email=email, posts=data, isGuest=isGuest)
 
@@ -57,13 +58,6 @@ def home():
 def logout():
     session.pop('email')
     return redirect('/')
-        
-app.secret_key = 'some key that you will never guess'
-#Run the app on localhost port 5000
-#debug = True -> you don't have to restart flask
-#for changes to go through, TURN OFF FOR PRODUCTION
-if __name__ == "__main__":
-    app.run('127.0.0.1', 5000, debug = True)
 
 #Authenticates the login
 @app.route('/loginAuth', methods=['GET', 'POST'])
@@ -138,6 +132,7 @@ def post():
 def viewContent():
     email_add = session['email']
     item_id = request.form['id']
+    session['item_id'] = item_id
     cursor = conn.cursor()
     query = 'SELECT * FROM contentitem WHERE item_id=%s'
     cursor.execute(query, (item_id))
@@ -191,6 +186,56 @@ def rate_comment():
     except Exception as e:
         app.log_exception(e)
         return render_template('rate_comment.html', item_id=item_id)
+
+@app.route('/tag')
+def tag():
+    return render_template('tag.html')
+
+@app.route('/tagContent', methods=['POST'])
+def tagContent():
+    email = session['email']
+    item_id = session['item_id']
+    try:
+        tagEmail = request.form['tagEmail']
+        cursor = conn.cursor()
+        if tagEmail == email:
+            query = 'INSERT INTO tag (email_tagged, email_tagger, item_id, status) VALUES (%s, %s, %s, %s)'
+            cursor.execute(query, (tagEmail, email, item_id, 'yes'))
+            conn.commit()
+            return render_template('tag.html', item_id=item_id)
+        elif tagEmail != email:
+            query = 'SELECT is_pub FROM ContentItem WHERE item_id = %s'
+            cursor.execute(query, (item_id))
+            result = cursor.fetchone()
+            is_pub = result['is_pub']
+            if is_pub:
+                query = 'INSERT INTO tag (email_tagged, email_tagger, item_id, status) VALUES (%s, %s, %s, %s)'
+                cursor.execute(query, (tagEmail, email, item_id, 'no'))
+                conn.commit()
+                return render_template('tag.html', item_id=item_id)
+            else:
+                query = 'SELECT email FROM belong WHERE fg_name IN (SELECT fg_name FROM share WHERE item_id = %s)'
+                cursor.execute(query, (item_id))
+                result = cursor.fetchall()
+                if tagEmail in result:
+                    query = 'INSERT INTO tag (email_tagged, email_tagger, item_id, status) VALUES (%s, %s, %s, %s)'
+                    cursor.execute(query, (tagEmail, email, item_id, 'no'))
+                    conn.commit()
+                    return render_template('tag.html', item_id=item_id)
+
+        cursor.close()
+        return render_template('tag.html', item_id=item_id, error='Cannot propose tag')
+    except Exception as e:
+        app.log_exception(e)
+        return render_template('tag.html', item_id=item_id, error='Cannot propose tag')
+
+
+app.secret_key = 'some key that you will never guess'
+#Run the app on localhost port 5000
+#debug = True -> you don't have to restart flask
+#for changes to go through, TURN OFF FOR PRODUCTION
+if __name__ == "__main__":
+    app.run('127.0.0.1', 5000, debug = True)
 
 # @app.route('/select_blogger')
 # def select_blogger():

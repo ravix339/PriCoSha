@@ -1,0 +1,13 @@
+<html>
+<head>
+</head>
+<body>
+  
+<h2>Tag Someone</h2>
+<form action="/tagContent" method="POST">
+    <input type="email" name="tagEmail" placeholder="Enter email to tag"/>
+    <input type="submit" value = "Tag"/>
+</form> 
+{% if error %}
+  <p class="error"><strong>Error:</strong> {{error}}</p>
+{% endif %}
