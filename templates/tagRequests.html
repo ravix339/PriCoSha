@@ -1,0 +1,36 @@
+<html>
+<head>
+</head>
+<body>
+  
+<style type="text/css">
+  table, th, td{
+    border: 1px solid black;
+  }
+</style>
+
+<h2>Tag Requests</h2>
+<table>
+    <th>Tagger Email</th>
+    <th>Item ID</th>
+  
+  {% for line in tagRequests %}
+    <tr>
+      <td>{{line.email_tagger}}</td>
+      <td>{{line.item_id}}</td>
+      <td>
+        <form action="/acceptTag" method="POST">
+          <input type="hidden" name="id" value="{{line.item_id}}"/>
+          <input type="hidden" name="tagger" value="{{line.email_tagger}}"/>
+          <input type="submit" value = "Accept"/>
+        </form> 
+        <br/>
+        <form action="/declineTag" method="POST">
+          <input type="hidden" name="id" value="{{line.item_id}}"/>
+          <input type="hidden" name="tagger" value="{{line.email_tagger}}"/>
+          <input type="submit" value = "Decline"/>
+        </form> 
+      </td>
+    </tr>
+  {% endfor %}
+  </table>

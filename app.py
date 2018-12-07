@@ -50,7 +50,6 @@ def home():
     query = 'SELECT post_time, item_id, email_post, file_path, item_name FROM ContentItem as S WHERE ((is_pub = 0 AND %s IN ( SELECT DISTINCT email FROM belong WHERE belong.fg_name IN ( SELECT fg_name FROM belong WHERE belong.email=s.email_post))) OR is_pub=1) AND post_time >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY post_time DESC'
     cursor.execute(query, (email))
     data = cursor.fetchall()
-    print(data)
     cursor.close()
     return render_template('home.html', email=email, posts=data, isGuest=isGuest)
 
@@ -229,6 +228,38 @@ def tagContent():
         app.log_exception(e)
         return render_template('tag.html', item_id=item_id, error='Cannot propose tag')
 
+
+@app.route('/viewTagRequests')
+def viewTagRequests():
+    email = session['email']
+    cursor = conn.cursor()
+    query = 'SELECT email_tagger, item_id FROM tag WHERE email_tagged = %s'
+    cursor.execute(query, (email))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('tagRequests.html', tagRequests = data)
+
+@app.route('/acceptTag', methods=['POST'])
+def acceptTag():
+    email = session['email']
+    item_id = request.form['id']
+    tagger = request.form['tagger']
+    cursor = conn.cursor()
+    query = 'UPDATE tag SET status=%s WHERE item_id=%s AND email_tagger=%s AND email_tagged=%s'
+    cursor.execute(query, ('yes', item_id, tagger, email))
+    conn.commit()
+    return redirect(url_for('home'))
+
+@app.route('/declineTag', methods=['POST'])
+def declineTag():
+    email = session['email']
+    item_id = request.form['id']
+    tagger = request.form['tagger']
+    cursor = conn.cursor()
+    query = 'UPDATE tag SET status=%s WHERE item_id=%s AND email_tagger=%s AND email_tagged=%s'
+    cursor.execute(query, ('no', item_id, tagger, email))
+    conn.commit()
+    return redirect(url_for('home'))
 
 app.secret_key = 'some key that you will never guess'
 #Run the app on localhost port 5000
