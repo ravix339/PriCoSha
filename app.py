@@ -321,8 +321,20 @@ def addFriend():
         conn.commit()
         return redirect(url_for('home'))
     else:
-        for elem in data:
-            friendEmail = elem['email']
+        return render_template('chooseFriend.html', friendsList = data)
+    return redirect(url_for('home'))
+
+@app.route('/addFriendWithEmail', methods=['POST'])
+def addFriendWithEmail():
+    owner_email = session['email']
+    friend_email = request.form['friendEmail']
+    try:
+        cursor = conn.cursor()
+        query = 'INSERT INTO Belong(email, owner_email, fg_name) VALUES (%s, %s, %s)'
+        cursor.execute(query, (friend_email, owner_email, session['fg_name']))
+        conn.commit()
+    except Exception as e:
+        app.log_exception(e)
     return redirect(url_for('home'))
 
 @app.route('/deleteFriend', methods=['POST'])

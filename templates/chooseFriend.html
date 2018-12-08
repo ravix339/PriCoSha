@@ -1,0 +1,31 @@
+<html>
+<head>
+</head>
+<body>
+
+<style type="text/css">
+  table, th, td{
+    border: 1px solid black;
+  }
+</style>
+
+<h2>Choose Friend</h2>
+
+<p><strong>Woah!</strong>Seems like there are multiple users with that name. Select one below:</p>
+
+<table>
+  <th>Member Email</th>
+  
+  {% for line in friendsList %}
+    <tr>
+      <td>{{line.email}}</td>
+      <td>
+        <form action="/addFriendWithEmail" method="POST">
+          <input type="hidden" name="friendEmail" value="{{line.email}}"/>
+          <input type="submit" value = "Add"/>
+        </form> 
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
+
