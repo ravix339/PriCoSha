@@ -258,7 +258,7 @@ def tagContent():
             query = 'INSERT INTO tag (email_tagged, email_tagger, item_id, status) VALUES (%s, %s, %s, %s)'
             cursor.execute(query, (tagEmail, email, item_id, 'yes'))
             conn.commit()
-            return render_template('tag.html', item_id=item_id)
+            return redirect(url_for('home'))
         elif tagEmail != email:
             query = 'SELECT is_pub FROM ContentItem WHERE item_id = %s'
             cursor.execute(query, (item_id))
@@ -268,7 +268,7 @@ def tagContent():
                 query = 'INSERT INTO tag (email_tagged, email_tagger, item_id, status) VALUES (%s, %s, %s, %s)'
                 cursor.execute(query, (tagEmail, email, item_id, 'no'))
                 conn.commit()
-                return render_template('tag.html', item_id=item_id)
+                return redirect(url_for('home'))
             else:
                 query = 'SELECT email FROM belong WHERE fg_name IN (SELECT fg_name FROM share WHERE item_id = %s)'
                 cursor.execute(query, (item_id))
@@ -277,7 +277,7 @@ def tagContent():
                     query = 'INSERT INTO tag (email_tagged, email_tagger, item_id, status) VALUES (%s, %s, %s, %s)'
                     cursor.execute(query, (tagEmail, email, item_id, 'no'))
                     conn.commit()
-                    return render_template('tag.html', item_id=item_id)
+                    return redirect(url_for('home'))
 
         cursor.close()
         return render_template('tag.html', item_id=item_id, error='Cannot propose tag')
@@ -335,6 +335,8 @@ def createFriendGroup():
         cursor = conn.cursor()
         query = 'INSERT INTO Friendgroup(owner_email, fg_name, description) VALUES (%s, %s, %s)'
         cursor.execute(query, (email, fg_name, desc))
+        query = 'INSERT INTO Belong(email, owner_email, fg_name) VALUES (%s, %s, %s)'
+        cursor.execute(query, (email, email, fg_name))
         conn.commit()
         return redirect(url_for('home'))
     return render_template('friendGroup.html', error="Friend Group with that name already exists")
