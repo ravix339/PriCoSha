@@ -1,0 +1,28 @@
+<html>
+<head>
+</head>
+<body>
+
+<style type="text/css">
+  table, th, td{
+    border: 1px solid black;
+  }
+</style>
+
+<h2>Select a Friend Group to Manage</h2>
+<table>
+    <th>Group Name</th>
+  
+  {% for line in friendGroups %}
+    <tr>
+      <td>{{line.fg_name}}</td>
+      <td>
+        <form action="/manageSpecificGroup" method="POST">
+          <input type="hidden" name="groupName" value="{{line.fg_name}}"/>
+          <input type="submit" value = "Manage"/>
+        </form> 
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
+

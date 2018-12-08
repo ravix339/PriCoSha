@@ -121,6 +121,7 @@ def post():
     item_name = request.form['title']
     filepath = request.form['filepath']
     is_pub = request.form['is_pub']
+    print(is_pub)
     query = 'INSERT INTO contentitem (email_post, post_time, file_path, item_name, is_pub) VALUES(%s, CURRENT_TIMESTAMP, %s, %s, %s)'
     cursor.execute(query, (email, filepath, item_name, is_pub))
     conn.commit()
@@ -260,6 +261,105 @@ def declineTag():
     cursor.execute(query, ('no', item_id, tagger, email))
     conn.commit()
     return redirect(url_for('home'))
+
+@app.route('/friendGroup')
+def friendGroup():
+    return render_template('friendGroup.html')
+
+@app.route('/createFriendGroup', methods=['POST'])
+def createFriendGroup():
+    email = session['email']
+    fg_name = request.form['groupName']
+    desc = request.form['groupDescription']
+    cursor = conn.cursor()
+    query = 'SELECT fg_name FROM Friendgroup WHERE owner_email = %s AND fg_name = %s'
+    cursor.execute(query, (email, fg_name))
+    data = cursor.fetchall()
+    if len(data) == 0:
+        cursor = conn.cursor()
+        query = 'INSERT INTO Friendgroup(owner_email, fg_name, description) VALUES (%s, %s, %s)'
+        cursor.execute(query, (email, fg_name, desc))
+        conn.commit()
+        return redirect(url_for('home'))
+    return render_template('friendGroup.html', error="Friend Group with that name already exists")
+
+@app.route('/manageGroup')
+def manageGroup():
+    email = session['email']
+    cursor = conn.cursor()
+    query = 'SELECT fg_name FROM Friendgroup WHERE owner_email = %s'
+    cursor.execute(query, (email))
+    data = cursor.fetchall()
+    return render_template('manageGroup.html', friendGroups = data)
+
+@app.route('/manageSpecificGroup', methods=['POST'])
+def manageSpecificGroup():
+    email = session['email']
+    fg_name = request.form['groupName']
+    session['fg_name'] = fg_name
+    cursor = conn.cursor()
+    query = 'SELECT email FROM Belong WHERE fg_name = %s'
+    cursor.execute(query, (fg_name))
+    data = cursor.fetchall()
+    return render_template('manageSpecificGroup.html', members = data, fg = fg_name)
+
+@app.route('/addFriend', methods=['POST'])
+def addFriend():
+    owner_email = session['email']
+    fname = request.form['fname']
+    lname = request.form['lname']
+    cursor = conn.cursor()
+    query = 'SELECT email FROM Person WHERE fname = %s AND lname = %s'
+    cursor.execute(query, (fname, lname))
+    data = cursor.fetchall()
+    if len(data) == 0:
+        return render_template('manageSpecificGroup.html', error = 'No user with this name')
+    elif len(data) == 1:
+        singleEmail = data[0]['email']
+        query = 'INSERT INTO Belong(email, owner_email, fg_name) VALUES (%s, %s, %s)'
+        cursor.execute(query, (singleEmail, owner_email, session['fg_name']))
+        conn.commit()
+        return redirect(url_for('home'))
+    else:
+        for elem in data:
+            friendEmail = elem['email']
+    return redirect(url_for('home'))
+
+@app.route('/deleteFriend', methods=['POST'])
+def deleteFriend():
+    owner_email = session['email']
+    friend_email = request.form['friendEmail']
+    cursor = conn.cursor()
+    query = 'DELETE FROM belong WHERE email = %s AND owner_email = %s and fg_name = %s'
+    cursor.execute(query, (friend_email, owner_email, session['fg_name']))
+    conn.commit()
+    return redirect(url_for('home'))
+
+
+
+
+
+
+    
+
+# @app.route('/createFriendGroup', methods=['POST'])
+# def createFriendGroup():
+#     email = session['email']
+#     fg_name = request.form['groupName']
+#     desc = request.form['groupDescription']
+#     cursor = conn.cursor()
+#     query = 'SELECT fg_name FROM Friendgroup WHERE owner_email = %s AND fg_name = %s'
+#     cursor.execute(query, (email, fg_name))
+#     data = cursor.fetchall()
+#     if len(data) == 0:
+#         cursor = conn.cursor()
+#         query = 'INSERT INTO Friendgroup(owner_email, fg_name, description) VALUES (%s, %s, %s)'
+#         cursor.execute(query, (email, fg_name, desc))
+#         conn.commit()
+#         return redirect(url_for('home'))
+#     return render_template('friendGroup.html', error="Friend Group with that name already exists")
+
+
 
 app.secret_key = 'some key that you will never guess'
 #Run the app on localhost port 5000

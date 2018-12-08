@@ -1,0 +1,41 @@
+<html>
+<head>
+</head>
+<body>
+
+<style type="text/css">
+  table, th, td{
+    border: 1px solid black;
+  }
+</style>
+
+<h2>{{fg}}</h2>
+
+<h4>Add Friend to Friend Group</h4>
+<form action="/addFriend" method="POST">
+    <input type="text" name="fname" placeholder="Enter First Name" required/>
+    <input type="text" name="lname" placeholder="Enter Last Name" required/>
+    <input type="submit" value = "Add"/>
+</form> 
+
+
+<table>
+  <th>Member Email</th>
+  
+  {% for line in members %}
+    <tr>
+      <td>{{line.email}}</td>
+      <td>
+        <form action="/deleteFriend" method="POST">
+          <input type="hidden" name="friendEmail" value="{{line.email}}"/>
+          <input type="submit" value = "Delete"/>
+        </form> 
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
+
+{% if error %}
+  <p class="error"><strong>Error:</strong> {{error}}</p>
+{% endif %}
+

@@ -1,0 +1,23 @@
+<html>
+<head>
+</head>
+<body>
+
+<style>
+  .desc {
+    height: 200px;
+    width: 400px;
+  }
+</style>
+  
+<h2>Create a Friend Group</h2>
+<form action="/createFriendGroup" method="POST">
+    <input type="text" name="groupName" placeholder="Enter Friend Group Name"/>
+    <br>
+    <input class="desc" type="text" name="groupDescription" placeholder="Enter Description"/>
+    <br>
+    <input type="submit" value = "Create"/>
+</form> 
+{% if error %}
+  <p class="error"><strong>Error:</strong> {{error}}</p>
+{% endif %}
