@@ -1,0 +1,33 @@
+<html>
+<head>
+</head>
+<body>
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+<form action="/private_post" method="POST">
+    <table>
+        <th>Name of Group</th>
+        <th>Owner of Group</th>
+        <th>Share to this group?</th>
+    {% for group in friendgroups %}
+        <tr>
+            <td>{{group.fg_name}}</td>
+            <td>{{group.owner_email}}</td>
+            <td><input type="checkbox" name="toshareto" value="{{group.fg_name}}{{special_delimiter}}{{group.owner_email}}" checked></td>
+        </tr>    
+    {% endfor %}
+    </table>
+	{% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+	{% endif %}
+    <input type="submit" value = Share />
+</form>
+<a href="/home">Cancel</a>
+
+</body>
+
+
+</html>
