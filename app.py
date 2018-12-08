@@ -7,13 +7,24 @@ import pymysql.cursors
 app = Flask(__name__)
 
 #Configure MySQL
+#Taimur connection
+# conn = pymysql.connect(host='localhost',
+#                        port = 8889,
+#                        user='root',
+#                        password='root',
+#                        db='PriCoSha',
+#                        charset='utf8mb4',
+#                        cursorclass=pymysql.cursors.DictCursor)
+
+# Ravi connection
 conn = pymysql.connect(host='localhost',
-                       port = 8889,
+                       port = 3306,
                        user='root',
-                       password='root',
+                       password='',
                        db='PriCoSha',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
+
 
 @app.before_request
 def make_session_permanent():
@@ -47,7 +58,7 @@ def home():
     else:
         isGuest='no'
     cursor = conn.cursor()
-    query = 'SELECT post_time, item_id, email_post, file_path, item_name FROM ContentItem as S WHERE ((is_pub = 0 AND %s IN ( SELECT DISTINCT email FROM belong WHERE belong.fg_name IN ( SELECT fg_name FROM belong WHERE belong.email=s.email_post))) OR is_pub=1) AND post_time >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY post_time DESC'
+    query = 'SELECT post_time, item_id, email_post, file_path, item_name FROM ContentItem as S WHERE ((is_pub=0 AND S.item_id IN (SELECT item_id FROM share WHERE (owner_email,fg_name) IN (SELECT belong.owner_email, belong.fg_name from belong WHERE email=%s))) OR is_pub=1) AND post_time >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY post_time DESC'
     cursor.execute(query, (email))
     data = cursor.fetchall()
     cursor.close()
@@ -121,11 +132,57 @@ def post():
     item_name = request.form['title']
     filepath = request.form['filepath']
     is_pub = request.form['is_pub']
-    query = 'INSERT INTO contentitem (email_post, post_time, file_path, item_name, is_pub) VALUES(%s, CURRENT_TIMESTAMP, %s, %s, %s)'
-    cursor.execute(query, (email, filepath, item_name, is_pub))
-    conn.commit()
-    cursor.close()
+    if is_pub=='1':
+        query = 'INSERT INTO contentitem (email_post, post_time, file_path, item_name, is_pub) VALUES(%s, CURRENT_TIMESTAMP, %s, %s, 1)'
+        cursor.execute(query, (email, filepath, item_name))
+        conn.commit()
+        cursor.close()
+    if is_pub == '0':
+        session['item_name'] = request.form['title']
+        session['filepath'] = request.form['filepath']
+        session['query'] = 'INSERT INTO contentitem (email_post, post_time, file_path, item_name, is_pub) VALUES(%s, CURRENT_TIMESTAMP, %s, %s, 0)'
+        return redirect(url_for('privatePost'))
     return redirect(url_for('home'))
+
+@app.route('/private_post', methods=['GET', 'POST'])
+def privatePost():
+    email = session['email']
+    try:
+        test_val = session['test_val']
+        session.pop('test_val')
+        to_share_to = request.form.getlist('toshareto')
+
+        cursor = conn.cursor()
+
+        item_name = session['item_name']
+        filepath = session['filepath']
+        query = session['query']
+        
+        cursor.execute(query, (email, filepath, item_name))
+
+        item_id = cursor.lastrowid
+
+        query = 'INSERT INTO share VALUES (%s, %s, %s)'
+        for group in to_share_to:
+            name, email = group.split('-' + app.secret_key +'-')
+            cursor.execute(query, (email,name,item_id))
+        
+        conn.commit()
+        cursor.close()
+
+        session.pop('item_name')
+        session.pop('filepath')
+        session.pop('query')
+        
+        return redirect(url_for('home'))
+    except Exception as e:
+        app.log_exception(e)
+        cursor = conn.cursor()
+        query = 'SELECT owner_email, fg_name FROM belong WHERE email=%s'
+        cursor.execute(query, (email))
+        groups = cursor.fetchall()
+        session['test_val'] = 'test_value'
+        return render_template('private_post.html', friendgroups=groups, special_delimiter='-'+app.secret_key+'-')
 
 @app.route('/viewContent', methods=['POST'])
 def viewContent():
